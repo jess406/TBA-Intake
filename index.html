@@ -137,6 +137,20 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
 <body>
+<!-- Hidden form so Netlify's build bot detects and registers the form -->
+<form name="client-intake" data-netlify="true" style="display:none">
+  <input type="hidden" name="form-name" value="client-intake" />
+  <input type="text" name="name" />
+  <input type="text" name="business" />
+  <textarea name="q2"></textarea>
+  <textarea name="q3"></textarea>
+  <textarea name="q4"></textarea>
+  <textarea name="q5"></textarea>
+  <input type="text" name="q6" />
+  <textarea name="q6note"></textarea>
+  <textarea name="q7"></textarea>
+  <textarea name="q8"></textarea>
+</form>
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
@@ -480,10 +494,30 @@ function App() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ step: nextStep, answers: nextAnswers })); } catch (e) {}
   }, []);
 
+  const submitToNetlify = useCallback((a) => {
+    const encode = (data) => Object.keys(data)
+      .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k] || ''))
+      .join('&');
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: encode({
+        'form-name': 'client-intake',
+        name: a.name || '', business: a.business || '',
+        q2: a.q2 || '', q3: a.q3 || '', q4: a.q4 || '',
+        q5: a.q5 || '', q6: a.q6 ? String(a.q6) : '', q6note: a.q6note || '',
+        q7: a.q7 || '', q8: a.q8 || '',
+      }),
+    }).catch(() => {});
+  }, []);
+
   const setAnswer = (k, v) => {
     setAnswers(prev => { const next = { ...prev, [k]: v }; persist(step, next); return next; });
   };
-  const go = (s) => { setStep(s); persist(s, answers); if (scroller.current) scroller.current.scrollTop = 0; };
+  const go = (s) => {
+    if (s === 'done') submitToNetlify(answers);
+    setStep(s); persist(s, answers); if (scroller.current) scroller.current.scrollTop = 0;
+  };
 
   let body;
   if (step === 'cover') {
