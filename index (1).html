@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Backend Architect · Client Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#121212;
+    --paper:#f7f5f1;
+    --sand:#b3a08f;
+    --olive:#55624e;
+    --gray:#9a8f84;
+    --paper-2:#efece5;
+    --paper-3:#e7e2d8;
+    --hair:#d9d3c8;
+    --ink-70:rgba(18,18,18,.7);
+    --ink-55:rgba(18,18,18,.55);
+    --ink-40:rgba(18,18,18,.4);
+    --olive-12:rgba(85,98,78,.12);
+    --serif:'Spectral',Georgia,serif;
+    --mono:'Courier Prime','Courier New',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e7e3db;
+    background-image:
+      radial-gradient(circle at 20% 18%, rgba(0,0,0,.05), transparent 55%),
+      radial-gradient(circle at 82% 86%, rgba(0,0,0,.06), transparent 55%);
+    min-height:100vh;
+    font-family:var(--serif);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .tba-eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.42em;
+    text-transform:uppercase;color:var(--ink-55);
+  }
+  .tba-stamp{
+    font-family:var(--mono);font-weight:700;text-transform:uppercase;
+    letter-spacing:.18em;border:2px solid currentColor;color:var(--olive);
+    border-radius:4px;padding:5px 11px;font-size:13px;display:inline-block;opacity:.85;
+  }
+  .tba-tag{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink);background:var(--sand);padding:3px 9px;display:inline-block;border-radius:2px;
+  }
+  .tba-num{
+    font-family:var(--serif);font-weight:300;line-height:.8;color:var(--sand);
+    font-feature-settings:"lnum" 1;
+  }
+  .tba-perf{
+    height:1px;width:100%;
+    background-image:radial-gradient(circle, var(--sand) 1px, transparent 1.4px);
+    background-size:9px 1px;background-repeat:repeat-x;opacity:.6;
+  }
+  .tba-grain{
+    position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:multiply;z-index:3;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  }
+  ::selection{background:var(--olive);color:var(--paper);}
+
+  .ev-label{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--ink-55);display:block;margin-bottom:9px;
+  }
+  .ev-line{
+    width:100%;border:0;border-bottom:1.6px solid var(--ink);background:transparent;
+    font-family:var(--serif);font-size:21px;color:var(--ink);padding:6px 2px 9px;
+    outline:none;transition:border-color .18s ease;
+  }
+  .ev-line::placeholder{color:var(--ink-40);font-style:italic;}
+  .ev-line:focus{border-color:var(--olive);}
+
+  .ev-area{
+    width:100%;border:1.5px solid var(--ink);background:var(--paper);
+    font-family:var(--serif);font-size:19px;line-height:34px;color:var(--ink);
+    padding:11px 16px 13px;outline:none;resize:none;
+    background-image:repeating-linear-gradient(
+      var(--paper), var(--paper) 33px, var(--hair) 33px, var(--hair) 34px);
+    background-attachment:local;
+    transition:box-shadow .18s ease, border-color .18s ease;
+  }
+  .ev-area::placeholder{color:var(--ink-40);font-style:italic;}
+  .ev-area:focus{border-color:var(--olive);box-shadow:0 0 0 3px var(--olive-12);}
+
+  .ruler-cell{
+    flex:1 1 0;min-width:0;aspect-ratio:1/1;border:1.5px solid var(--ink);
+    border-left-width:0;background:transparent;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    font-family:var(--mono);font-weight:700;font-size:17px;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    transition:background-color .14s ease, color .14s ease;position:relative;
+  }
+  .ruler-cell:first-child{border-left-width:1.5px;}
+  .ruler-cell:hover{background:var(--paper-3);}
+  .ruler-cell.is-on{background:var(--olive);color:var(--paper);}
+  .ruler-cell.is-on:hover{background:var(--olive);}
+
+  .btn{
+    font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:.16em;
+    font-size:12.5px;padding:15px 26px;cursor:pointer;border:1.5px solid var(--ink);
+    display:inline-flex;align-items:center;gap:11px;transition:all .16s ease;line-height:1;
+  }
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:#000;}
+  .btn-primary:disabled{background:var(--paper-2);color:var(--ink-40);border-color:var(--hair);cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:transparent;padding-left:6px;padding-right:14px;}
+  .btn-ghost:hover{color:var(--olive);}
+  .btn-ghost:disabled{color:var(--ink-40);cursor:not-allowed;}
+
+  @keyframes stepIn{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .step-anim{animation:stepIn .42s cubic-bezier(.2,.7,.2,1) both;}
+  @keyframes stampIn{
+    0%{transform:scale(1.5) rotate(-7deg);}
+    60%{transform:scale(.92) rotate(-7deg);}
+    100%{transform:scale(1) rotate(-7deg);}
+  }
+  @media (prefers-reduced-motion:reduce){.step-anim{animation:none;}}
+
+  @media (max-width:560px){
+    .hide-narrow{display:none;}
+    .ev-line{font-size:18px;}
+    .ev-area{font-size:17px;}
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+function useReveal() {
+  const [shown, setShown] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setShown(true), 20); return () => clearTimeout(t); }, []);
+  const reduce = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return {};
+  return {
+    opacity: shown ? 1 : 0,
+    transform: shown ? 'none' : 'translateY(10px)',
+    transition: 'opacity .42s cubic-bezier(.2,.7,.2,1), transform .42s cubic-bezier(.2,.7,.2,1)',
+  };
+}
+
+const CASE_NO = 'TBA-002';
+const STORE_KEY = 'tba-intake-v1';
+
+const INTRO = "Eight short questions before we meet. They help me walk into our call already understanding your business and where the friction is — so we spend our thirty minutes on answers, not background. Be candid; the honest replies are the useful ones.";
+
+const QUESTIONS = [
+  {
+    n: '01', kind: 'identity', required: true,
+    title: "Let's start with you.",
+    sub: "Your name and your business name.",
+  },
+  {
+    n: '02', kind: 'text', key: 'q2', required: true,
+    title: "What does your business do, and how long have you been running it?",
+    hint: "A sentence or two is plenty.",
+    rows: 4,
+  },
+  {
+    n: '03', kind: 'text', key: 'q3', required: true,
+    title: "When you look at your bank account at the end of the month, does the number surprise you — and not in a good way?",
+    lead: "Tell me what that usually feels like.",
+    hint: "Be as honest as you'd like. There are no wrong answers here.",
+    rows: 4,
+  },
+  {
+    n: '04', kind: 'text', key: 'q4', required: true,
+    title: "When did you last look at your P&L — and what did you actually do with it after?",
+    rows: 4,
+  },
+  {
+    n: '05', kind: 'text', key: 'q5', optional: true,
+    title: "What financial question have you been avoiding asking because you're not sure you want the answer?",
+    sub: "The one in the back of your mind.",
+    hint: "“Honestly, I’m not sure” is a completely valid answer.",
+    rows: 4,
+  },
+  {
+    n: '06', kind: 'scale', key: 'q6', required: true,
+    title: "How clearly do you understand where your money goes every month?",
+    sub: "1 is a complete fog. 10 is crystal clear.",
+    lowLabel: 'Not at all clear', highLabel: 'Total clarity',
+    followTitle: "And what’s making it hard to get to a 10?",
+    followSub: "What gets in the way?",
+    followKey: 'q6note', followOptional: true,
+  },
+  {
+    n: '07', kind: 'text', key: 'q7', required: true,
+    title: "What would change — in your business, or your life — if you had total clarity on your numbers every single day?",
+    sub: "Picture it for a moment.",
+    rows: 4,
+  },
+  {
+    n: '08', kind: 'text', key: 'q8', optional: true,
+    title: "Is there anything else you want me to know before we talk?",
+    sub: "The floor is yours.",
+    rows: 4,
+  },
+];
+
+function Wordmark({ size = 14, color = 'var(--ink)' }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, color }}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flex: '0 0 auto' }}>
+        <rect x="2.5" y="2.5" width="19" height="19" rx="2" stroke={color} strokeWidth="1.6" />
+        <path d="M7 8.5h10M7 12h10M7 15.5h6" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+      <span style={{ fontFamily: 'var(--serif)', fontWeight: 600, fontSize: size, letterSpacing: '-.01em' }}>
+        The Backend Architect
+      </span>
+    </span>
+  );
+}
+
+function OptionalTag() {
+  return <span className="tba-tag" style={{ background: 'transparent', border: '1.5px solid var(--sand)', color: 'var(--olive)' }}>Optional</span>;
+}
+
+function TabStrip() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'stretch', borderBottom: '2px solid var(--ink)', flex: '0 0 auto' }}>
+      <div style={{ background: 'var(--ink)', color: 'var(--paper)', padding: '13px 22px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase' }}>Case Intake</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.24em', color: 'var(--sand)' }}>No. {CASE_NO}</span>
+      </div>
+      <div style={{ flex: 1 }} />
+      <div style={{ display: 'flex', alignItems: 'center', padding: '0 22px' }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--ink-55)' }} className="hide-narrow">
+          Confidential · For Client Eyes Only
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Progress({ idx }) {
+  return (
+    <div style={{ flex: '0 0 auto', padding: '0 0 4px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 11 }}>
+        <span className="tba-eyebrow">Exhibit {QUESTIONS[idx].n} <span style={{ color: 'var(--ink-40)', letterSpacing: '.2em' }}>/ {QUESTIONS.length.toString().padStart(2, '0')}</span></span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+          {Math.round(((idx) / QUESTIONS.length) * 100)}% filed
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        {QUESTIONS.map((q, i) => (
+          <div key={q.n} style={{
+            flex: 1, height: 4,
+            background: i < idx ? 'var(--olive)' : i === idx ? 'var(--ink)' : 'var(--hair)',
+            transition: 'background-color .3s ease',
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScaleRuler({ value, onPick, lowLabel, highLabel }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', width: '100%' }}>
+        {Array.from({ length: 10 }, (_, i) => i + 1).map(num => {
+          const on = value === num;
+          return (
+            <button key={num} type="button" className={'ruler-cell' + (on ? ' is-on' : '')}
+              style={on ? { background: '#55624e', color: '#f7f5f1' } : null}
+              onClick={() => onPick(num)}>
+              {num}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink-55)' }}>{lowLabel}</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink-55)' }}>{highLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function QuestionScreen({ q, idx, answers, setAnswer, onNext, onBack }) {
+  const firstRef = useRef(null);
+  const reveal = useReveal();
+  useEffect(() => {
+    const t = setTimeout(() => { if (firstRef.current) firstRef.current.focus(); }, 460);
+    return () => clearTimeout(t);
+  }, [idx]);
+
+  const valid = (() => {
+    if (q.optional) return true;
+    if (q.kind === 'identity') return (answers.name || '').trim() && (answers.business || '').trim();
+    if (q.kind === 'scale') return !!answers[q.key];
+    return (answers[q.key] || '').trim().length > 0;
+  })();
+
+  const isLast = idx === QUESTIONS.length - 1;
+  const advance = () => { if (valid) onNext(); };
+  const onKey = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); advance(); }
+  };
+
+  return (
+    <div key={idx} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, ...reveal }}>
+      <Progress idx={idx} />
+
+      <div style={{ flex: 1, paddingTop: 30, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <span className="tba-num" style={{ fontSize: 62, flex: '0 0 auto', marginTop: -6 }}>{q.n}</span>
+          <div style={{ flex: 1 }}>
+            {q.optional && <div style={{ marginBottom: 13 }}><OptionalTag /></div>}
+            <h2 style={{ margin: 0, fontFamily: 'var(--serif)', fontWeight: 600, fontSize: 28, lineHeight: 1.22, letterSpacing: '-.01em', textWrap: 'pretty' }}>
+              {q.title}
+            </h2>
+            {q.lead && <p style={{ margin: '12px 0 0', fontSize: 18, lineHeight: 1.45, color: 'var(--ink-70)', fontStyle: 'italic' }}>{q.lead}</p>}
+            {q.sub && <p style={{ margin: '12px 0 0', fontFamily: 'var(--mono)', fontSize: 12.5, letterSpacing: '.04em', color: 'var(--ink-55)' }}>{q.sub}</p>}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 30, paddingLeft: 82 }} onKeyDown={onKey}>
+          {q.kind === 'identity' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 34 }}>
+              <div>
+                <label className="ev-label" htmlFor="f-name">Your name</label>
+                <input id="f-name" ref={firstRef} className="ev-line" type="text" placeholder="Jordan Avery"
+                  value={answers.name || ''} onChange={e => setAnswer('name', e.target.value)} />
+              </div>
+              <div>
+                <label className="ev-label" htmlFor="f-biz">Business name</label>
+                <input id="f-biz" className="ev-line" type="text" placeholder="Avery & Co."
+                  value={answers.business || ''} onChange={e => setAnswer('business', e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {q.kind === 'text' && (
+            <div>
+              <textarea ref={firstRef} className="ev-area" rows={q.rows || 4}
+                placeholder="Write your statement…"
+                value={answers[q.key] || ''} onChange={e => setAnswer(q.key, e.target.value)} />
+              {q.hint && <p style={{ margin: '14px 0 0', fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 15, color: 'var(--ink-55)' }}>{q.hint}</p>}
+            </div>
+          )}
+
+          {q.kind === 'scale' && (
+            <div>
+              <ScaleRuler value={answers[q.key]} onPick={v => setAnswer(q.key, v)}
+                lowLabel={q.lowLabel} highLabel={q.highLabel} />
+              <div style={{ marginTop: 34 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
+                  <h3 style={{ margin: 0, fontFamily: 'var(--serif)', fontWeight: 600, fontSize: 20, letterSpacing: '-.01em' }}>{q.followTitle}</h3>
+                  {q.followOptional && <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--sand)' }}>Optional</span>}
+                </div>
+                <p style={{ margin: '0 0 16px', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '.04em', color: 'var(--ink-55)' }}>{q.followSub}</p>
+                <textarea ref={firstRef} className="ev-area" rows={3}
+                  placeholder="Write your statement…"
+                  value={answers[q.followKey] || ''} onChange={e => setAnswer(q.followKey, e.target.value)} />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ flex: '0 0 auto', marginTop: 26 }}>
+        <div className="tba-perf" style={{ marginBottom: 22 }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button className="btn btn-ghost" onClick={onBack}>
+            <span style={{ fontSize: 15 }}>‹</span> Back
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            {q.optional && !valid && (
+              <button className="btn btn-ghost" onClick={onNext} style={{ color: 'var(--ink-55)' }}>Skip</button>
+            )}
+            <button className="btn btn-primary" onClick={advance} disabled={!valid}>
+              {isLast ? 'Send & book my call' : 'File this answer'} <span style={{ opacity: .6 }}>›</span>
+            </button>
+          </div>
+        </div>
+        <p style={{ margin: '14px 2px 0', textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+          ⌘ + Enter to continue
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Cover({ onBegin, hasProgress, onResume }) {
+  const reveal = useReveal();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, ...reveal }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 8 }}>
+        <div className="tba-eyebrow" style={{ marginBottom: 22 }}>Before your 30-minute clarity call</div>
+        <h1 style={{ margin: 0, fontFamily: 'var(--serif)', fontWeight: 700, fontSize: 60, lineHeight: 1.0, letterSpacing: '-.025em' }}>
+          Client<br />Intake Form
+        </h1>
+        <p style={{ margin: '30px 0 0', maxWidth: 540, fontSize: 18.5, lineHeight: 1.6, color: 'var(--ink-70)' }}>
+          {INTRO}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 26, marginTop: 40, flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={hasProgress ? onResume : onBegin}>
+            {hasProgress ? 'Resume the file' : 'Open the file'} <span style={{ opacity: .6 }}>›</span>
+          </button>
+          {hasProgress && <button className="btn btn-ghost" onClick={onBegin}>Start fresh</button>}
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+            8 exhibits · ~5 minutes
+          </span>
+        </div>
+      </div>
+      <div style={{ flex: '0 0 auto' }}>
+        <div className="tba-perf" style={{ marginBottom: 22 }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Wordmark size={14} />
+          <span style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 17, color: 'var(--olive)' }}>
+            Know your numbers. Own your decisions.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Confirmation({ answers, onReview }) {
+  const reveal = useReveal();
+  const name = (answers.name || '').trim().split(' ')[0];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, ...reveal }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+        <div style={{ marginBottom: 34 }}>
+          <span className="tba-stamp" style={{
+            fontSize: 20, padding: '11px 20px', letterSpacing: '.22em',
+            display: 'inline-block', animation: 'stampIn .6s ease both',
+          }}>Received · Filed</span>
+        </div>
+        <div className="tba-eyebrow" style={{ marginBottom: 18 }}>Case {CASE_NO} · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+        <h1 style={{ margin: 0, fontFamily: 'var(--serif)', fontWeight: 700, fontSize: 46, lineHeight: 1.08, letterSpacing: '-.02em' }}>
+          {name ? `Thank you, ${name}.` : 'Thank you.'}<br />The file is on my desk.
+        </h1>
+        <p style={{ margin: '26px 0 0', maxWidth: 520, fontSize: 18, lineHeight: 1.6, color: 'var(--ink-70)' }}>
+          Your answers come straight to me, in confidence. We'll talk them through on the call — I'll
+          walk in already knowing the shape of your business and where the friction is.
+        </p>
+        <div style={{ marginTop: 34 }}>
+          <button className="btn btn-ghost" onClick={onReview} style={{ paddingLeft: 0 }}>‹ Review my answers</button>
+        </div>
+      </div>
+      <div style={{ flex: '0 0 auto' }}>
+        <div className="tba-perf" style={{ marginBottom: 22 }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Wordmark size={14} />
+          <span style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 17, color: 'var(--olive)' }}>
+            Know your numbers. Own your decisions.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const saved = (() => { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } })();
+  const [step, setStep] = useState('cover');
+  const [answers, setAnswers] = useState(saved.answers || {});
+  const hasProgress = !!(saved.answers && Object.keys(saved.answers).length > 0 && saved.step != null && saved.step !== 'cover');
+  const scroller = useRef(null);
+
+  const persist = useCallback((nextStep, nextAnswers) => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ step: nextStep, answers: nextAnswers })); } catch (e) {}
+  }, []);
+
+  const setAnswer = (k, v) => {
+    setAnswers(prev => { const next = { ...prev, [k]: v }; persist(step, next); return next; });
+  };
+  const go = (s) => { setStep(s); persist(s, answers); if (scroller.current) scroller.current.scrollTop = 0; };
+
+  let body;
+  if (step === 'cover') {
+    body = <Cover hasProgress={hasProgress}
+      onBegin={() => { setAnswers({}); persist(0, {}); setStep(0); }}
+      onResume={() => go(typeof saved.step === 'number' ? saved.step : 0)} />;
+  } else if (step === 'done') {
+    body = <Confirmation answers={answers} onReview={() => go(QUESTIONS.length - 1)} />;
+  } else {
+    const q = QUESTIONS[step];
+    body = <QuestionScreen q={q} idx={step} answers={answers} setAnswer={setAnswer}
+      onNext={() => go(step === QUESTIONS.length - 1 ? 'done' : step + 1)}
+      onBack={() => go(step === 0 ? 'cover' : step - 1)} />;
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      <div style={{
+        position: 'relative', width: 'min(820px, 100%)', minHeight: 700,
+        background: 'var(--paper)', boxShadow: '0 18px 60px rgba(0,0,0,.22), 0 2px 0 rgba(0,0,0,.04)',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        <div className="tba-grain" />
+        <div style={{ position: 'absolute', top: 8, left: 8, right: -8, bottom: -8, background: 'var(--paper-3)', zIndex: -1 }} />
+        <TabStrip />
+        <div ref={scroller} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '34px 56px 38px', minHeight: 620, position: 'relative', zIndex: 2 }}>
+          {body}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
